@@ -8,6 +8,7 @@ class MainWindow:
         self.screen_width = screen_width
         self.screen_height = screen_height
         self.screen_ratio = screen_width / 3840
+        self.half_screen_ratio = 0.45 + self.screen_ratio / 2
         self.production_speed_ratio = 1
         self.window = QMainWindow()
         self.window.resize(self.screen_width, self.screen_height)
@@ -20,23 +21,28 @@ class MainWindow:
         self.box_height = self.grid_height * 2 + self.init_bias + 5 * self.screen_ratio
 
         # Subtitle: app name - author
-        self.subtitle_font_size = 30 * self.screen_ratio
+        self.subtitle_font_size = 50 * self.screen_ratio
+        if self.screen_ratio > 0.7:
+            self.subtitle_font_size = 50 * self.screen_ratio / 1.5
         subtitle = QLabel(self.window)
         subtitle.setText('戴森球计划 材料生产计算器 -- by 魂月')
-        subtitle.setStyleSheet('QLabel {font: 75 ' + str(self.subtitle_font_size) + 'pt "宋体";}')
-        subtitle.move(1000 * self.screen_ratio, int(25 / self.screen_ratio))
+        subtitle.setStyleSheet('QLabel {font: 75 ' + str(int(self.subtitle_font_size)) + 'pt "宋体";}')
+        subtitle.move(1000 * self.screen_ratio, int(25 * self.screen_ratio))
         subtitle.resize(1840 * self.screen_ratio, self.box_height * self.screen_ratio)
 
         # Bottom: 取整机器数量
         self.button = QPushButton('取整机器数量', self.window)
-        self.button.move(2500 * self.screen_ratio, int(25 / self.screen_ratio) + int(self.box_height / 3))
+        self.button.move(2840 * self.screen_ratio, int(25 * self.screen_ratio) + int(self.box_height / 3))
         self.button.resize(400 * self.screen_ratio, int(self.box_height / 3))
-        self.button.setStyleSheet('QLabel {font: ' + str(self.subtitle_font_size) + 'pt "宋体";}')
+        self.button.setStyleSheet('QPushButton {font: ' + str(int(self.subtitle_font_size / 2)) + 'pt "宋体";}')
         self.button.clicked.connect(self.ceil_machine_number)
 
         self.ox = (self.screen_width - 12 * self.box_width) / 2
         self.oy = self.box_height + 50 * self.screen_ratio
-        self.font_size = 14 * self.screen_ratio
+        self.font_size = 14 * self.half_screen_ratio
+        self.line_edit_font_size = self.font_size * 0.9
+        if self.screen_ratio < 0.45:
+            self.line_edit_font_size = self.font_size * 0.75
         self.element = source.element
         self.production = source.production
         self.supporter = source.support
@@ -68,7 +74,7 @@ class MainWindow:
         group_box.setTitle('')
         group_box.setStyleSheet('QGroupBox { background-color: \
             rgb(255, 255, 255); border: 3px solid rgb(122, 255, 100); } \
-            QGroupBox::title{font: 75 100pt "宋体"; color: rgb(255, 0, 0)}')
+            QGroupBox::title{font: 75 ' + str(100 * self.screen_ratio) + 'pt "宋体"; color: rgb(255, 0, 0)}')
 
         label_again = QLabel(group_box)
         label_again.setStyleSheet('QLabel {font: 75 ' + str(self.font_size) + 'pt "宋体"; color: rgb(255, 0, 0)}')
@@ -80,39 +86,47 @@ class MainWindow:
         product_label00.setText('产量')
         product_label00.move(3, self.init_bias)
         product_label00.resize(self.grid_width, self.grid_height)
+        product_label00.setStyleSheet('QLabel {font: 75 ' + str(self.font_size) + 'pt "宋体"}')
         product00 = QLineEdit(group_box)
         product00.setText('0')
         product00.move(self.grid_width, self.init_bias)
         product00.resize(self.grid_width, self.grid_height)
         product00.setEnabled(False)
+        product00.setStyleSheet('QLineEdit {font: ' + str(self.line_edit_font_size) + 'pt "宋体"}')
 
         product_label10 = QLabel(group_box)
         product_label10.setText('额外')
         product_label10.move(3, self.grid_height + self.init_bias)
         product_label10.resize(self.grid_width, self.grid_height)
+        product_label10.setStyleSheet('QLabel {font: 75 ' + str(self.font_size) + 'pt "宋体"}')
         product10 = QLineEdit(group_box)
         product10.setText('0')
         product10.move(self.grid_width, self.grid_height + self.init_bias)
         product10.resize(self.grid_width, self.grid_height)
+        product10.setStyleSheet('QLineEdit {font: ' + str(self.line_edit_font_size) + 'pt "宋体"}')
 
         product_label01 = QLabel(group_box)
         product_label01.setText('机器')
         product_label01.move(self.grid_width * 2 + self.interval, self.init_bias)
         product_label01.resize(self.grid_width, self.grid_height)
+        product_label01.setStyleSheet('QLabel {font: 75 ' + str(self.font_size) + 'pt "宋体"}')
         product01 = QLineEdit(group_box)
         product01.setText('0.0')
         product01.move(self.grid_width * 3 + self.interval, self.init_bias)
         product01.resize(self.grid_width, self.grid_height)
+        product01.setStyleSheet('QLineEdit {font: ' + str(self.line_edit_font_size) + 'pt "宋体"}')
         product01.setEnabled(False)
 
         product_label11 = QLabel(group_box)
         product_label11.setText('已有')
         product_label11.move(self.grid_width * 2 + self.interval, self.grid_height + self.init_bias)
         product_label11.resize(self.grid_width, self.grid_height)
+        product_label11.setStyleSheet('QLabel {font: 75 ' + str(self.font_size) + 'pt "宋体"}')
         product11 = QLineEdit(group_box)
         product11.setText('0')
         product11.move(self.grid_width * 3 + self.interval, self.grid_height + self.init_bias)
         product11.resize(self.grid_width, self.grid_height)
+        product11.setStyleSheet('QLineEdit {font: ' + str(self.line_edit_font_size) + 'pt "宋体"}')
         if resource in self.supporter:
             product11.setEnabled(True)
         else:
@@ -209,7 +223,7 @@ class MainWindow:
         for idx in range(len(self.sorted_element)):
             resource = self.sorted_element[idx]
             i, j = self.get_idx(resource)
-            if self.element_amount[i][j][0] < 0 and resource in self.supporter:
+            if self.element_amount[i][j][0] < 0:
                 pass
             else:
                 current_machine_number = self.element_amount[i][j][1]
