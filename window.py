@@ -39,6 +39,7 @@ class MainWindow:
         self.font_size = 14 * self.screen_ratio
         self.element = source.element
         self.production = source.production
+        self.supporter = source.support
         self.sorted_element = source.sorted_element
         self.element_box = [[[None, None, None, None] for _ in range(len(self.element[0]))] for _ in range(len(self.element))]
         self.element_amount = [[[0, 0, 0, 0] for _ in range(len(self.element[0]))] for _ in range(len(self.element))]
@@ -112,7 +113,10 @@ class MainWindow:
         product11.setText('0')
         product11.move(self.grid_width * 3 + self.interval, self.grid_height + self.init_bias)
         product11.resize(self.grid_width, self.grid_height)
-        product11.setEnabled(False)
+        if resource in self.supporter:
+            product11.setEnabled(True)
+        else:
+            product11.setEnabled(False)
 
         self.map[resource] = [product00, product01, product10, product11]
         return [product00, product01, product10, product11]
@@ -141,7 +145,7 @@ class MainWindow:
             # 1. Set all "产量" box to be the values of their "额外" box.
             for resource in self.sorted_element:
                 i, j = self.get_idx(resource)
-                self.element_amount[i][j][0] = self.element_amount[i][j][2]
+                self.element_amount[i][j][0] = self.element_amount[i][j][2] - self.element_amount[i][j][3]
             # 2. Recalculate the values for all "产量" box.
             for produce_resource in self.sorted_element:
                 i, j = self.get_idx(produce_resource)
@@ -149,7 +153,25 @@ class MainWindow:
                 for component in self.production[produce_resource][1:]:
                     idx = self.get_idx(component[0])
                     self.element_amount[idx[0]][idx[1]][0] += produce_resource_amount * component[1]
-            # 3. Recalculate the values for all "机器" box.
+            # 3. Deal with the negative values in "产量" box.
+            for produce_resource in self.sorted_element:
+                i, j = self.get_idx(produce_resource)
+                negative_product_amount = self.element_amount[i][j][0]
+                if negative_product_amount < 0:
+                    if produce_resource in self.supporter:
+                        for secondary_product in self.supporter[produce_resource]:
+                            product_name = secondary_product[0]
+                            product_amount = secondary_product[1]
+                            can_be_negative = secondary_product[2]
+                            idx = self.get_idx(product_name)
+                            current_product = self.element_amount[idx[0]][idx[1]][0]
+                            if not can_be_negative and current_product < -negative_product_amount * product_amount:
+                                self.produce_resource(product_name, -current_product)
+                                self.element_amount[idx[0]][idx[1]][0] = 0
+                            else:
+                                self.produce_resource(product_name, negative_product_amount * product_amount)
+                                self.element_amount[idx[0]][idx[1]][0] -= -negative_product_amount * product_amount
+            # 4. Recalculate the values for all "机器" box.
             for produce_resource in self.sorted_element:
                 i, j = self.get_idx(produce_resource)
                 produce_resource_amount = self.element_amount[i][j][0]
