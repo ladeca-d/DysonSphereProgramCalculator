@@ -209,15 +209,18 @@ class MainWindow:
         for idx in range(len(self.sorted_element)):
             resource = self.sorted_element[idx]
             i, j = self.get_idx(resource)
-            current_machine_number = self.element_amount[i][j][1]
-            obj_machine_number = ceil(current_machine_number)
-            produce_speed = self.production[resource][0][0]
-            obj_production_number = (obj_machine_number * produce_speed)
-            increase_production_number = obj_production_number - self.element_amount[i][j][0]
-            self.element_amount[i][j][0] = obj_production_number
-            self.element_amount[i][j][1] = obj_machine_number
-            if idx != len(self.sorted_element) - 1:
-                self.produce_resource(resource, increase_production_number)
+            if self.element_amount[i][j][0] < 0 and resource in self.supporter:
+                pass
+            else:
+                current_machine_number = self.element_amount[i][j][1]
+                obj_machine_number = ceil(current_machine_number)
+                produce_speed = self.production[resource][0][0]
+                obj_production_number = (obj_machine_number * produce_speed)
+                increase_production_number = obj_production_number - self.element_amount[i][j][0]
+                self.element_amount[i][j][0] = obj_production_number
+                self.element_amount[i][j][1] = obj_machine_number
+                if idx != len(self.sorted_element) - 1:
+                    self.produce_resource(resource, increase_production_number)
         # update the window by new values.
         for i in range(len(self.element)):
             for j in range(len(self.element[0])):
