@@ -40,20 +40,19 @@ class MainWindow:
         self.ox = (self.screen_width - 12 * self.box_width) / 2
         self.oy = self.box_height + 50 * self.screen_ratio
         self.font_size = 14 * self.half_screen_ratio
-        self.line_edit_font_size = self.font_size * 0.9
-        if self.screen_ratio < 0.45:
-            self.line_edit_font_size = self.font_size * 0.75
+        self.line_edit_font_size = self.font_size * 0.9 * 0.75
         self.element = source.element
         self.production = source.production
         self.supporter = source.support
+        self.bi_material = source.bi_material
         self.sorted_element = source.sorted_element
         self.element_box = [[[None, None, None, None] for _ in range(len(self.element[0]))] for _ in range(len(self.element))]
         self.element_amount = [[[0, 0, 0, 0] for _ in range(len(self.element[0]))] for _ in range(len(self.element))]
-        self.map = {}
         self.table_gen()
-        for k, v in self.map.items():
-            for v_elem in v:
-                v_elem.editingFinished.connect(self.update_table(k))
+        for resource in self.sorted_element:
+            i, j = self.get_idx(resource)
+            for k in range(4):
+                self.element_box[i][j][k].editingFinished.connect(self.update_element_amount)
 
     def table_gen(self):
         nrows = len(self.element)
@@ -132,11 +131,20 @@ class MainWindow:
         else:
             product11.setEnabled(False)
 
-        self.map[resource] = [product00, product01, product10, product11]
         return [product00, product01, product10, product11]
 
+    # update the window by the values of the self.element_amount.
+    def update_view(self, is_int=[True, False, True, True]):
+        for resource in self.sorted_element:
+            i, j = self.get_idx(resource)
+            for k in range(4):
+                amount = round(self.element_amount[i][j][k], 1)
+                if is_int[k]:
+                    amount = int(self.element_amount[i][j][k])
+                self.element_box[i][j][k].setText(str(amount))
+
     def get_idx(self, resource):
-        idx = [-1, -1]
+        idx = None
         if resource != '':
             for i in range(len(self.element)):
                 for j in range(len(self.element[0])):
@@ -144,68 +152,18 @@ class MainWindow:
                         idx = [i, j]
         return idx
 
-    def update_table(self, resource):
-        def update_table_inner():
-            # Update self.element_amount.
-            for resource in self.sorted_element:
-                i, j = self.get_idx(resource)
-                for k in range(4):
-                    input_value = self.element_box[i][j][k].text()
-                    if input_value != '':
-                        self.element_amount[i][j][k] = int(float(input_value))
-                    else:
-                        self.element_amount[i][j][k] = 0
-            # Recalculate the self.element_amount.
-            # 1. Set all "产量" box to be the values of their "额外" box.
-            for resource in self.sorted_element:
-                i, j = self.get_idx(resource)
-                self.element_amount[i][j][0] = self.element_amount[i][j][2] - self.element_amount[i][j][3]
-            # 2. Recalculate the values for all "产量" box.
-            for produce_resource in self.sorted_element:
-                i, j = self.get_idx(produce_resource)
-                produce_resource_amount = self.element_amount[i][j][0]
-                for component in self.production[produce_resource][1:]:
-                    idx = self.get_idx(component[0])
-                    self.element_amount[idx[0]][idx[1]][0] += produce_resource_amount * component[1]
-            # 3. Deal with the negative values in "产量" box.
-            for produce_resource in self.sorted_element:
-                i, j = self.get_idx(produce_resource)
-                negative_product_amount = self.element_amount[i][j][0]
-                if negative_product_amount < 0:
-                    if produce_resource in self.supporter:
-                        for secondary_product in self.supporter[produce_resource]:
-                            product_name = secondary_product[0]
-                            product_amount = secondary_product[1]
-                            can_be_negative = secondary_product[2]
-                            idx = self.get_idx(product_name)
-                            current_product = self.element_amount[idx[0]][idx[1]][0]
-                            if not can_be_negative and current_product < -negative_product_amount * product_amount:
-                                self.produce_resource(product_name, -current_product)
-                                self.element_amount[idx[0]][idx[1]][0] = 0
-                            else:
-                                self.produce_resource(product_name, negative_product_amount * product_amount)
-                                self.element_amount[idx[0]][idx[1]][0] -= -negative_product_amount * product_amount
-            # 4. Recalculate the values for all "机器" box.
-            for produce_resource in self.sorted_element:
-                i, j = self.get_idx(produce_resource)
-                produce_resource_amount = self.element_amount[i][j][0]
-                produce_speed = self.production[produce_resource][0][0]
-                self.element_amount[i][j][1] = produce_resource_amount / produce_speed
-            # update the window by new values.
-            for i in range(len(self.element)):
-                for j in range(len(self.element[0])):
-                    if self.element[i][j] != '':
-                        for k in range(4):
-                            if k != 2 and k != 1:
-                                amount = int(self.element_amount[i][j][k])
-                            elif k == 1:
-                                amount = round(self.element_amount[i][j][k], 2)
-                            else:
-                                amount = self.element_amount[i][j][k]
-                            self.element_box[i][j][k].setText(str(amount))
-        return update_table_inner
-
     def produce_resource(self, resource, increase_production_number):
+        # Add resource amount in self.element_amount.
+        idx = self.get_idx(resource)
+        if not idx:
+            exit(1)
+        else:
+            i, j = idx
+            self.element_amount[i][j][0] += increase_production_number
+            production_speed = self.production[resource][0][0]
+            self.element_amount[i][j][1] += increase_production_number / production_speed
+
+        # Start to product required amount of the resource.
         component = self.production[resource][1:]
         if not component:
             return
@@ -213,37 +171,114 @@ class MainWindow:
         for obj_resource in component:
             production_name = obj_resource[0]
             production_number = increase_production_number * obj_resource[1]
-            i, j = self.get_idx(production_name)
-            self.element_amount[i][j][0] += production_number
-            produce_speed = self.production[production_name][0][0]
-            self.element_amount[i][j][1] = self.element_amount[i][j][0] / produce_speed
             self.produce_resource(production_name, production_number)
 
-    def ceil_machine_number(self):
-        for idx in range(len(self.sorted_element)):
-            resource = self.sorted_element[idx]
+    def calculate_supporter(self):
+        for supporter, properties in self.supporter.items():
+            i, j = self.get_idx(supporter)
+            amount = self.element_amount[i][j][3]
+            for production in properties:
+                i, j = self.get_idx(production[0])
+                production_amount = self.element_amount[i][j][0]
+                convert_amount_to_production_amount = amount * production[1]
+                need_negative_production = convert_amount_to_production_amount - production_amount
+                if need_negative_production > 0:
+                    self.produce_resource(production[0], -1 * production_amount)
+                else:
+                    self.produce_resource(production[0],  -1 * convert_amount_to_production_amount)
+
+    def calculate_bi_raw_material(self):
+        # Calculate the need of the bi_raw_materials.
+        for material, properties in self.bi_material.items():
+            # production1
+            production1 = properties[0][0]
+            i, j = self.get_idx(production1)
+            production1_amount = properties[0][1]
+            need_production1_amount = self.element_amount[i][j][0]
+            need_material_amount1 = need_production1_amount / production1_amount
+            # production2
+            production2 = properties[1][0]
+            i, j = self.get_idx(production2)
+            production2_amount = properties[1][1]
+            need_production2_amount = self.element_amount[i][j][0]
+            need_material_amount2 = need_production2_amount / production2_amount
+
+            # Calculate the need of the material
+            need_material_amount = max(need_material_amount1, need_material_amount2)
+            i, j = self.get_idx(material)
+            self.element_amount[i][j][0] = need_material_amount
+            material_production_speed = self.production[material][0][0]
+            self.element_amount[i][j][1] = need_material_amount / material_production_speed
+
+    def update_element_amount(self, has_supporter=True):
+        # Read all LineEdit boxes.
+        for resource in self.sorted_element:
             i, j = self.get_idx(resource)
-            if self.element_amount[i][j][0] < 0:
-                pass
+            for k in range(4):
+                input_value = self.element_box[i][j][k].text()
+                if k == 0 or k == 1 or input_value == '':
+                    self.element_amount[i][j][k] = 0.0
+                else:
+                    self.element_amount[i][j][k] = float(input_value)
+
+        # Produce the required amount of all resources.
+        for resource in self.sorted_element:
+            i, j = self.get_idx(resource)
+            production_amount = self.element_amount[i][j][2] - self.element_amount[i][j][3]
+            if production_amount < 0:
+                self.produce_resource(resource, 0)
             else:
-                current_machine_number = self.element_amount[i][j][1]
-                obj_machine_number = ceil(current_machine_number)
-                produce_speed = self.production[resource][0][0]
-                obj_production_number = (obj_machine_number * produce_speed)
-                increase_production_number = obj_production_number - self.element_amount[i][j][0]
-                self.element_amount[i][j][0] = obj_production_number
-                self.element_amount[i][j][1] = obj_machine_number
-                if idx != len(self.sorted_element) - 1:
-                    self.produce_resource(resource, increase_production_number)
-        # update the window by new values.
-        for i in range(len(self.element)):
-            for j in range(len(self.element[0])):
-                if self.element[i][j] != '':
-                    for k in range(4):
-                        amount = (self.element_amount[i][j][k])
-                        self.element_box[i][j][k].setText(str(amount))
+                self.produce_resource(resource, production_amount)
+
+        # Calculate the second product of the special supporter.
+        if has_supporter:
+            self.calculate_supporter()
+        # Calculate the need of the bi_raw_material.
+        self.calculate_bi_raw_material()
+        # Update the view of the app.
+        self.update_view()
+
+    def ceil_machine_number(self):
+        # Re-update element amount without considering supporter.
+        self.update_element_amount(False)
+
+        # Calculate supporter.
+        supporter_stack = dict()
+        for support, products in self.supporter.items():
+            i, j = self.get_idx(support)
+            support_amount = self.element_amount[i][j][3]
+            for product in products:
+                product_name = product[0]
+                product_amount = product[1]
+                supporter_stack[product_name] = support_amount * product_amount
+
+        # Ceil machine amount and produce the required amount of the resources.
+        for resource in self.sorted_element:
+            if resource not in self.supporter:
+                i, j = self.get_idx(resource)
+                production_speed = self.production[resource][0][0]
+                if resource in supporter_stack:
+                    cur_resource_amount = self.element_amount[i][j][0]
+                    real_resource_amount = cur_resource_amount - supporter_stack[resource]
+                    if real_resource_amount > 0:
+                        cur_machine_amount = real_resource_amount / production_speed
+                        new_machine_amount = ceil(cur_machine_amount)
+                    else:
+                        new_machine_amount = 0
+                else:
+                    cur_machine_amount = self.element_amount[i][j][1]
+                    new_machine_amount = ceil(cur_machine_amount)
+                    cur_resource_amount = self.element_amount[i][j][0]
+                incre_resource_amount = new_machine_amount * production_speed - cur_resource_amount
+                self.produce_resource(resource, incre_resource_amount)
+                self.element_amount[i][j][1] = new_machine_amount
+
+        # Calculate the need of the bi_raw_material.
+        self.calculate_bi_raw_material()
+        # Update the view of the app.
+        # Production amount is allowed to be float since its unit is piece/min.
+        self.update_view([False, True, True, True])
 
     def show(self):
         self.window.show()
-
 

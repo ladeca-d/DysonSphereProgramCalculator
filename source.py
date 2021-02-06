@@ -26,7 +26,7 @@ production['高纯硅块'] = [[30], ['硅矿', 2]]
 production['钛块'] = [[30], ['钛矿', 2]]
 production['石材'] = [[60], ['石矿', 1]]
 production['高能石墨'] = [[30], ['煤矿', 2]]
-production['精炼油'] = [[30], ['原油', 1], ['氢', -0.5]]
+production['精炼油'] = [[30]]
 production['塑料'] = [[20], ['精炼油', 2], ['高能石墨', 1]]
 production['石墨烯'] = [[40], ['高能石墨', 1.5], ['硫酸', 0.5]]
 production['可燃冰'] = [[60]]
@@ -103,8 +103,18 @@ production['制造台 Mk.III'] = [[15], ['制造台 Mk.II', 1], ['粒子宽带',
 production['电弧熔炉'] = [[20], ['铁块', 4], ['石材', 2], ['电路板', 4], ['磁线圈', 2]]
 
 # Special Supporters
+# The element in this list should be produced directly.
+# The element in this list should not be an ingredient in "production" list,
+# Format: [resource: str, second_production_amount: float, can_be_negative: bool]
 support = dict()
 support['可燃冰'] = [['氢', 0.5, True], ['石墨烯', 1, False]]
+
+# Special raw material (two second_production)
+# The element in this list should be produced directly.
+# The element in this list should not be an ingredient in "production" list,
+# Format: [resource: str, second_production_amount: float]
+bi_material = dict()
+bi_material['原油'] = [['氢', 0.5], ['精炼油', 1]]
 
 
 # def check_eq_production_element():
@@ -158,13 +168,13 @@ support['可燃冰'] = [['氢', 0.5, True], ['石墨烯', 1, False]]
 # print(sorted_element)
 
 # Hard coded.
-sorted_element = ['可燃冰', '电弧熔炉', '制造台 Mk.III', '制造台 Mk.II', '制造台 Mk.I', '极速分拣器', '高速分拣器', '分拣器',
+sorted_element = ['电弧熔炉', '制造台 Mk.III', '制造台 Mk.II', '制造台 Mk.I', '极速分拣器', '高速分拣器', '分拣器',
                   '极速传送带', '高速传送带', '传送带', '地基', '宇宙矩阵', '引力矩阵', '信息矩阵', '结构矩阵', '能量矩阵', '电磁矩阵',
                   '反物质燃料棒', '湮灭约束球', '反物质', '小型运载火箭', '量子芯片', '戴森球组件', '星际物流运输船', '物流运输机',
                   '处理器', '微晶原件', '太阳帆', '光子合并器', '框架材料', '空间翘曲器', '引力透镜', '奇异物质', '粒子容器', '位面过滤器',
                   '卡西米尔晶体', '粒子宽带', '氘核燃料棒', '超级磁场环', '电浆激发器', '碳纳米管', '重氢', '加力推进器', '钛合金', '石墨烯',
                   '硫酸', '电路板', '电磁涡轮', '电动机', '齿轮', '推进器', '钛晶石', '棱镜', '钛化玻璃', '钢材', '液氢燃料棒',
                   '有机晶体', '塑料', '精炼油', '氢', '金刚石', '玻璃', '晶格硅', '磁线圈', '磁铁', '高能石墨', '石材', '钛块', '高纯硅块',
-                  '铜块', '铁块', '临界光子', '水', '原油', '煤矿', '石矿', '钛矿', '硅矿', '铜矿', '铁矿']
+                  '铜块', '铁块', '临界光子', '水', '原油', '煤矿', '石矿', '钛矿', '硅矿', '铜矿', '铁矿', '可燃冰']
 
 
