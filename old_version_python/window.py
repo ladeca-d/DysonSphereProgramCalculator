@@ -3,7 +3,7 @@ from math import ceil
 import source
 
 
-class MainWindow:
+class MainWindow(QMainWindow):
     def __init__(self, screen_width, screen_height):
         self.screen_width = screen_width
         self.screen_height = screen_height
