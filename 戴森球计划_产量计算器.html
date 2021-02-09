@@ -2422,19 +2422,17 @@
 			function updateTable(has_supporter = true) {
 				var arr = constructTable()
 				for (var i = 0; i < n; i++) {
-					var productionAmount = arr[i][2] - arr[i][3]
-					if (productionAmount < 0) {
-						produceResource(elementLayout[i], 0, arr)
-					} else {
-						produceResource(elementLayout[i], productionAmount, arr)
-					}
+					var productionAmount = arr[i][2]
+					produceResource(elementLayout[i], productionAmount, arr)
 				}
 
 				if (has_supporter) {
 					calculateSupporter(arr)
 				}
+
 				calculateBiRawMaterial(arr)
 				updateView(arr)
+
 				return arr
 			}
 
@@ -2512,8 +2510,9 @@
 					} else {
 						jqValue[i].value = arr[i][1]
 					}
-					ewValue[i].value = arr[i][2]
-					yyValue[i].value = arr[i][3]
+					// // The ew and the yy values should not be modified in any situation.
+					// ewValue[i].value = arr[i][2]
+					// yyValue[i].value = arr[i][3]
 				}
 			}
 
@@ -2522,9 +2521,26 @@
 				if (idx == -1) {
 					alert("软件存在致命错误！请勿使用并重新下载最新版本或联系作者。")
 				}
-				innerAmount[idx][0] += increaseProductionNumber
-				const productionSpeed = production[resource][0][0]
-				innerAmount[idx][1] += increaseProductionNumber / productionSpeed
+				
+				// Three cases:
+				// 1. The amount of the manufacture is higher than the existing production amount.
+				// 2. The amount of the manufacture is negative, which means they should be destroyed.
+				// 3. The amount of the manufacture is lower than the existing production amount.
+				if (increaseProductionNumber > innerAmount[idx][3]) {
+					increaseProductionNumber -= innerAmount[idx][3]
+					innerAmount[idx][0] += increaseProductionNumber
+					innerAmount[idx][3] = 0
+					var productionSpeed = production[resource][0][0]
+					innerAmount[idx][1] += increaseProductionNumber / productionSpeed
+				} else if (increaseProductionNumber < 0) {
+					innerAmount[idx][0] += increaseProductionNumber
+					var productionSpeed = production[resource][0][0]
+					innerAmount[idx][1] += increaseProductionNumber / productionSpeed
+				} else {
+					innerAmount[idx][3] -= increaseProductionNumber
+					return
+				}
+
 
 				if (production[resource].length == 1) {
 					return
