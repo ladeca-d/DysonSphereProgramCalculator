@@ -13,8 +13,9 @@
 			style="width: 8em; height: 3em; font-size: 1em; font-weight: bold; color: magenta; font-family: 宋体">取整机器数量</button>
 	</p>
 	<!-- <p style="color: red; font-weight: bold; font-size: 1em;">*所有带"*"的材料附带有简要说明，将鼠标移入即可看到。</p> -->
+	<button style="color: magenta; font-size: 1.2em; font-weight: bolder; font-family: 宋体" id="manual">使用手册</button>
 	<p style="color: magenta; font-size: 1.4em; font-weight: bolder; font-family: 宋体">制造台选择：
-		<select id="assembler"  style="font-size: 0.7em; font-weight: bold; font-family: 宋体">
+		<select id="assembler" style="font-size: 0.7em; font-weight: bold; font-family: 宋体">
 			<option value="1">制造台 Mk.I</option>
 			<option value="2" selected>制造台 Mk.II</option>
 			<option value="3">制造台 Mk.III</option>
@@ -1956,6 +1957,7 @@
 			var yyValue = document.getElementsByName("yy")
 			var resourceTable = document.getElementsByName("resource")
 			var resourceTitle = document.getElementsByName("resourceTitle")
+			var manualDom = document.querySelector("#manual")
 			const n = ewValue.length
 
 			for (var i = 0; i < n; i++) {
@@ -1971,13 +1973,26 @@
 				}
 			}
 
-			zztDom.onchange = function() {
+			zztDom.onchange = function () {
 				updateMachineLabel(zztDom.value)
 				updateTable()
 			}
 
 			qzjqDom.onclick = function () {
 				ceilMachineNumber()
+			}
+
+			manualDom.onclick = function () {
+				var alertText =
+					'1. 假如你需要每分钟生产120宇宙矩阵，请在"宇宙矩阵"的"额外"栏里输入120。你可以同时输入多个生产目标。\n' +
+					'2. 此时，需要的所有材料的表格都会黄色高亮显示。请根据"产量"或者"机器"数量建设你的生产线。\n' + 
+					'3. 材料带"*"号后缀的有相应解释说明，将鼠标移入可以看到。\n' +
+					'4. 蓝色名字的材料为特殊材料，请在"已有"栏里输入你目前或者计划中的产量。如：x射线裂解，在"已有"里输入15代表你有一座精炼塔满负荷进行裂解。\n' +
+					'5. 所有材料的已有栏里都可以输入数字。代表你想减去不要的生产数量。比如你找到了硫酸海，自然可以在"硫酸"栏的"已有"里输入你硫酸海的产量。避免程序为你规划生产硫酸所需的次级材料。\n' +
+					'6. 别忘了选择你所需要的制造台等级。\n' +
+					'7. 取整机器数量按钮，会为你生成一个所有机器都取整的方案。推荐你使用取整功能。' 
+
+				alert(alertText)
 			}
 
 			const elementLayout = ["铁矿", "铜矿", "硅矿", "钛矿", "石矿", "煤矿", "原油", "水", "临界光子", "铁块", "铜块", "高纯硅块", "钛块", "石材",
@@ -2665,19 +2680,19 @@
 					innerAmount[idx][3] = 0
 					var productionSpeed = production[resource][0][0]
 					if (machineLib.has(resource)) {
-							var productionMachine = machineLib.get(resource)
-							var productionSpeedRatio = machineProductionSpeed.get(productionMachine)
-							productionSpeed *= productionSpeedRatio
-						}
+						var productionMachine = machineLib.get(resource)
+						var productionSpeedRatio = machineProductionSpeed.get(productionMachine)
+						productionSpeed *= productionSpeedRatio
+					}
 					innerAmount[idx][1] += increaseProductionNumber / productionSpeed
 				} else if (increaseProductionNumber < 0) {
 					innerAmount[idx][0] += increaseProductionNumber
 					var productionSpeed = production[resource][0][0]
 					if (machineLib.has(resource)) {
-							var productionMachine = machineLib.get(resource)
-							var productionSpeedRatio = machineProductionSpeed.get(productionMachine)
-							productionSpeed *= productionSpeedRatio
-						}
+						var productionMachine = machineLib.get(resource)
+						var productionSpeedRatio = machineProductionSpeed.get(productionMachine)
+						productionSpeed *= productionSpeedRatio
+					}
 					innerAmount[idx][1] += increaseProductionNumber / productionSpeed
 				} else {
 					innerAmount[idx][3] -= increaseProductionNumber
