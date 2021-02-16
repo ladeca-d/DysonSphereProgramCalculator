@@ -130,3 +130,6 @@ dmypy.json
 
 # TODO
 TODO.md
+
+#.idea
+.idea/
